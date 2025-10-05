@@ -81,7 +81,7 @@
                     </p>
                     
                  </div>
-                <% if(currUser && review.author._id.equals(currUser._id)) { %>
+                <% if (currUser && review.author._id.toString() === currUser._id.toString()) { %>
                  <form class="mb-3" method="post" action="/listings/<%=listing._id%>/reviews/<%=review._id%>?_method=DELETE">
                     <button class="btn btn-sm btn-dark">Delete</button>
                  </form>
