@@ -1,0 +1,96 @@
+<%layout("/layouts/boilerplate")-%>
+
+<style>
+#filters{
+    display: flex;
+    flex-wrap: wrap;
+    margin-left: 5rem;
+}
+.filters{
+    text-align: center;
+    margin-top: 2rem;
+    margin-right: 2rem;
+    opacity: 0.7;
+}
+.filters:hover{
+    opacity: 1;
+    cursor: pointer;
+}
+.filters p{
+    font-size: 1 rem;
+
+}
+</style>
+
+<div id="filters">
+<div class="filters">
+    <div><i class="fa-solid fa-bed"></i></div>
+    <p>Rooms</p>
+</div>
+<div class="filters">
+    <div><i class="fa-solid fa-leaf"></i></div>
+    <p>Amazing views</p>
+</div>
+<div class="filters">
+    <div><i class="fa-brands fa-fort-awesome"></i></div>
+    <p>Castle</p>
+</div>
+<div class="filters">
+    <div><i class="fa-solid fa-campground"></i></div>
+    <p>Camping</p>
+</div>
+<div class="filters">
+    <div><i class="fa-solid fa-mountain"></i></div>
+    <p>Mountains</p>
+</div>
+<div class="filters">
+    <div><i class="fa-solid fa-person-swimming"></i></div>
+    <p>Amazing pools</p>
+</div>
+<div class="filters">
+    <div><i class="fa-solid fa-snowflake"></i></div>
+    <p>Arctic</p>
+</div>
+<div class="filters">
+    <div><i class="fa-solid fa-sun"></i></div>
+    <p>Desert</p>
+</div>
+<div class="filters">
+    <div><i class="fa-solid fa-ship"></i></div>
+    <p>Boat</p>
+</div>
+<div class="filters">
+    <div><i class="fa-solid fa-volleyball"></i></div>
+    <p>Play</p>
+</div>
+
+
+</div>
+
+<div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 mt-3">
+  <% if (allListings.length === 0) { %>
+    <div class="col">
+      <p class="text-muted">No listings found for "<%= q %>"</p>
+    </div>
+  <% } else { %>
+    <% for (let listing of allListings) { %>
+      <a href="/listings/<%= listing._id %>" class="listing-link">
+        <div class="card col listing-card">
+          <img src="<%= listing.image.url %>" 
+               class="card-img-top" 
+               alt="Listing_image" 
+               style="height: 20rem; object-fit: cover;">
+          <div class="card-body">
+            <p class="card-text">
+              <b><%= listing.title %></b><br>
+              ₹<%= listing.price.toLocaleString("en-IN") %>/night<br>
+              <small><%= listing.location %>, <%= listing.country %></small>
+            </p>
+          </div>
+        </div>
+      </a>
+    <% } %>
+  <% } %>
+</div>
+
+   
