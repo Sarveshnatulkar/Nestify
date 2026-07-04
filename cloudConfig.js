@@ -11,7 +11,7 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'nestify_DEV',
-    alloweredFormats: ["png","jpg","jpeg"]
+    allowedFormats: ["png","jpg","jpeg"]
   },
 });
 
