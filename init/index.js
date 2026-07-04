@@ -2,7 +2,7 @@ const mongoose=require("mongoose");
 const initData=require("./data.js");
 const Listing=require("../models/listing.js");
 
-const mongo_url="mongodb://127.0.0.1:27017/nestify";
+const mongo_url="mongodb+srv://Sarvesh:NSbAUOiqO64rDeHW@smartnotes.bs6xs2h.mongodb.net/nestify?retryWrites=true&w=majority&appName=SmartNotes";
 main().then(()=>{
     console.log("connected to db");
 }).catch((err)=>{
