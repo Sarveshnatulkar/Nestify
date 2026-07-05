@@ -3,8 +3,22 @@
 <div class="row mt-4">
   <div class="col-lg-8 offset-lg-2 col-12">
 
-    <!-- Title -->
-    <h2 class="page-title"><%=listing.title%></h2>
+    <!-- Title + wishlist button -->
+    <div class="d-flex align-items-start justify-content-between mb-3">
+      <h2 class="page-title mb-0"><%=listing.title%></h2>
+      <% if (currUser) { %>
+        <% const isSaved = wishlistIds.has(listing._id.toString()); %>
+        <form method="post"
+              action="/wishlist/<%=listing._id%><%= isSaved ? '?_method=DELETE' : '' %>">
+          <button type="submit"
+                  class="wishlist-heart-btn <%= isSaved ? 'saved' : '' %>"
+                  title="<%= isSaved ? 'Remove from wishlist' : 'Save to wishlist' %>"
+                  aria-label="<%= isSaved ? 'Remove from wishlist' : 'Save to wishlist' %>">
+            <i class="<%= isSaved ? 'fa-solid' : 'fa-regular' %> fa-heart"></i>
+          </button>
+        </form>
+      <% } %>
+    </div>
 
     <!-- Hero image -->
     <img src="<%=listing.image.url%>" class="show-img mb-3" alt="<%=listing.title%>">

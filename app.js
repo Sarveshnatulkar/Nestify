@@ -18,9 +18,10 @@ const { buildSessionOptions } = require("./config/session.js");
 const passportConfig       = require("./config/passport.js");
 const ExpressError         = require("./utils/ExpressError.js");
 
-const listingRouter = require("./routes/listing.js");
-const reviewRouter  = require("./routes/review.js");
-const userRouter    = require("./routes/user.js");
+const listingRouter  = require("./routes/listing.js");
+const reviewRouter   = require("./routes/review.js");
+const userRouter     = require("./routes/user.js");
+const wishlistRouter = require("./routes/wishlist.js");
 
 // ── Database ──────────────────────────────────────────────────────────────────
 connect().catch((err) => {
@@ -51,11 +52,23 @@ app.use(passport.session());
 passportConfig.initialize();
 
 // ── Locals available to every template ───────────────────────────────────────
-app.use((req, res, next) => {
+app.use(async (req, res, next) => {
     res.locals.success  = req.flash("success");
     res.locals.error    = req.flash("error");
     res.locals.currUser = req.user;
     res.locals.q        = req.query.q || "";
+
+    // Expose wishlist IDs as a Set so templates can check O(1)
+    // without an extra DB call on every route
+    if (req.user) {
+        const User = require("./models/user.js");
+        const u = await User.findById(req.user._id).select("wishlist");
+        res.locals.wishlistIds = new Set(
+            (u.wishlist || []).map((id) => id.toString())
+        );
+    } else {
+        res.locals.wishlistIds = new Set();
+    }
     next();
 });
 
@@ -63,6 +76,7 @@ app.use((req, res, next) => {
 app.get("/", (req, res) => res.redirect("/listings"));
 app.use("/listings", listingRouter);
 app.use("/listings/:id/reviews", reviewRouter);
+app.use("/wishlist", wishlistRouter);
 app.use("/", userRouter);
 
 // ── 404 handler ───────────────────────────────────────────────────────────────

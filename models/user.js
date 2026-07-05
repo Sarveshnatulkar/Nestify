@@ -14,6 +14,12 @@ const userSchema = new Schema(
             trim:     true,
             lowercase: true,
         },
+        wishlist: [
+            {
+                type: Schema.Types.ObjectId,
+                ref:  "Listing",
+            },
+        ],
     },
     { timestamps: true }
 );
