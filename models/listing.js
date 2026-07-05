@@ -43,6 +43,12 @@ const listingSchema = new Schema(
             type: String,
             trim: true,
         },
+        category: {
+            type:    String,
+            enum:    ["Rooms", "Amazing views", "Castle", "Camping", "Mountains",
+                      "Amazing pools", "Arctic", "Desert", "Boat", "Play"],
+            default: "Rooms",
+        },
         // GeoJSON Point — populated server-side via Mapbox Geocoding API
         // when a listing is created or updated.
         // null means geocoding failed or has not run yet.

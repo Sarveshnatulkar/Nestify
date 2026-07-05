@@ -5,25 +5,78 @@ const { geocode } = require("../utils/geocode.js");
 
 // GET /listings
 module.exports.index = async (req, res) => {
-    const q = (req.query.q || "").trim();
+    const {
+        q        = "",
+        category = "",
+        country  = "",
+        minPrice = "",
+        maxPrice = "",
+        minRating = "",
+        sort     = "",
+    } = req.query;
 
-    let allListings;
+    const searchTerm = q.trim();
 
-    if (q) {
-        allListings = await Listing
-            .find(
-                { $text: { $search: q } },
-                { score: { $meta: "textScore" } }
-            )
-            .sort({ score: { $meta: "textScore" } });
-    } else {
-        allListings = await Listing.find({});
+    // ── Build MongoDB filter ───────────────────────────────────────────────
+    const filter = {};
+
+    // Full-text search
+    if (searchTerm) {
+        filter.$text = { $search: searchTerm };
     }
+
+    // Category
+    if (category) filter.category = category;
+
+    // Country (case-insensitive exact match)
+    if (country) filter.country = { $regex: `^${country.trim()}$`, $options: "i" };
+
+    // Price range
+    if (minPrice || maxPrice) {
+        filter.price = {};
+        if (minPrice) filter.price.$gte = Number(minPrice);
+        if (maxPrice) filter.price.$lte = Number(maxPrice);
+    }
+
+    // ── Build sort ────────────────────────────────────────────────────────
+    let sortOption = { createdAt: -1 }; // default: newest first
+    if (sort === "price_asc")  sortOption = { price:  1 };
+    if (sort === "price_desc") sortOption = { price: -1 };
+    if (sort === "newest")     sortOption = { createdAt: -1 };
+
+    // ── Query ─────────────────────────────────────────────────────────────
+    let query = Listing.find(filter);
+
+    // When using $text, also project relevance score
+    if (searchTerm) {
+        query = Listing.find(filter, { score: { $meta: "textScore" } });
+        if (sort === "") sortOption = { score: { $meta: "textScore" } };
+    }
+
+    let allListings = await query.sort(sortOption).populate("reviews");
+
+    // ── Rating filter (post-query — reviews are refs, not embedded values)
+    if (minRating) {
+        const min = Number(minRating);
+        allListings = allListings.filter((listing) => {
+            if (!listing.reviews.length) return false;
+            const avg = listing.reviews.reduce((sum, r) => sum + (r.rating || 0), 0)
+                        / listing.reviews.length;
+            return avg >= min;
+        });
+    }
+
+    // ── Distinct countries for the dropdown ───────────────────────────────
+    const allCountries = await Listing.distinct("country");
+    allCountries.sort();
 
     res.render("listings/index.ejs", {
         allListings,
-        q,
+        q:           searchTerm,
         resultCount: allListings.length,
+        // Pass active filters back so the UI can reflect current state
+        filters: { category, country, minPrice, maxPrice, minRating, sort },
+        allCountries,
     });
 };
 

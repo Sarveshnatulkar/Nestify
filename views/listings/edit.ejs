@@ -58,6 +58,18 @@
           <div class="invalid-feedback">Enter a location.</div>
         </div>
 
+        <div class="mb-4">
+          <label for="category" class="form-label">Category</label>
+          <select id="category" name="listing[category]" class="form-control" required>
+            <option value="">Select a category</option>
+            <% const cats = ["Rooms","Amazing views","Castle","Camping","Mountains","Amazing pools","Arctic","Desert","Boat","Play"]; %>
+            <% for (let c of cats) { %>
+              <option value="<%= c %>" <%= listing.category === c ? 'selected' : '' %>><%= c %></option>
+            <% } %>
+          </select>
+          <div class="invalid-feedback">Select a category.</div>
+        </div>
+
         <button type="submit" class="btn btn-brand px-4">Save Changes</button>
 
       </form>
