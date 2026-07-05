@@ -160,10 +160,11 @@
           <a href="/listings/<%= listing._id %>" class="listing-link">
             <div class="listing-card">
               <img
-                src="<%= listing.image.url %>"
+                src="<%= listing._thumbUrl %>"
                 class="card-img-top"
                 alt="<%= listing.title %>"
                 loading="lazy"
+                decoding="async"
               />
               <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start mt-1">

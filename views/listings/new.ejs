@@ -22,12 +22,29 @@
           <div class="invalid-feedback">Please add a description.</div>
         </div>
 
+        <!-- ── Image upload ───────────────────────────────────── -->
         <div class="mb-3">
-          <label for="image" class="form-label">Listing Image</label>
-          <input id="image" name="listing[image]" type="file" class="form-control"
-                 accept="image/png, image/jpeg, image/jpg" required />
-          <div class="invalid-feedback">Please upload an image.</div>
+          <label class="form-label">
+            Photos
+            <span class="upload-hint">Up to 5 images · JPG, PNG, WebP · Max 8 MB each</span>
+          </label>
+
+          <div class="upload-drop-zone" id="dropZone">
+            <input id="images" name="listing[images]" type="file"
+                   accept="image/jpeg,image/png,image/webp"
+                   multiple class="upload-file-input" />
+            <div class="upload-drop-body">
+              <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+              <p class="upload-drop-text">Drag & drop photos here, or <span class="upload-browse">browse</span></p>
+              <p class="upload-drop-hint">First photo will be the cover image</p>
+            </div>
+          </div>
+
+          <!-- Preview grid — populated by JS -->
+          <div class="upload-preview-grid" id="previewGrid"></div>
+          <div class="invalid-feedback d-block" id="imageError" style="display:none!important;"></div>
         </div>
+        <!-- ──────────────────────────────────────────────────── -->
 
         <div class="row g-3 mb-3">
           <div class="col-md-4">
@@ -44,7 +61,7 @@
           </div>
         </div>
 
-        <div class="mb-4">
+        <div class="mb-3">
           <label for="location" class="form-label">Location</label>
           <input id="location" name="listing[location]" type="text" class="form-control"
                  placeholder="City, neighbourhood or landmark" required />
@@ -55,16 +72,9 @@
           <label for="category" class="form-label">Category</label>
           <select id="category" name="listing[category]" class="form-control" required>
             <option value="">Select a category</option>
-            <option value="Rooms">Rooms</option>
-            <option value="Amazing views">Amazing views</option>
-            <option value="Castle">Castle</option>
-            <option value="Camping">Camping</option>
-            <option value="Mountains">Mountains</option>
-            <option value="Amazing pools">Amazing pools</option>
-            <option value="Arctic">Arctic</option>
-            <option value="Desert">Desert</option>
-            <option value="Boat">Boat</option>
-            <option value="Play">Play</option>
+            <% ["Rooms","Amazing views","Castle","Camping","Mountains","Amazing pools","Arctic","Desert","Boat","Play"].forEach(c => { %>
+              <option value="<%= c %>"><%= c %></option>
+            <% }); %>
           </select>
           <div class="invalid-feedback">Select a category.</div>
         </div>

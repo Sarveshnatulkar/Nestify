@@ -55,8 +55,10 @@ module.exports.isReviewAuthor = async (req, res, next) => {
 
 // ── Validation factory ────────────────────────────────────────────────────────
 // Returns an Express middleware that validates req.body against the given schema.
+// allowUnknown: true — silently ignores top-level fields outside the schema
+// (e.g. deleteImages, _method, CSRF tokens) so they don't cause false rejections.
 const validateBody = (schema) => (req, res, next) => {
-    const { error } = schema.validate(req.body);
+    const { error } = schema.validate(req.body, { allowUnknown: true });
     if (error) {
         const message = error.details.map((d) => d.message).join(", ");
         throw new ExpressError(400, message);
