@@ -4,17 +4,21 @@ const Listing        = require("../models/listing.js");
 const { geocode }    = require("../utils/geocode.js");
 const { cloudinary } = require("../cloudConfig.js");
 
+const DEFAULT_IMAGE_URL =
+    "https://images.unsplash.com/photo-1720884413532-59289875c3e1" +
+    "?q=80&w=735&auto=format&fit=crop&ixlib=rb-4.1.0";
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-/** Delete an array of Cloudinary public_ids in parallel. */
-const deleteFromCloudinary = async (filenames) => {
-    if (!filenames || filenames.length === 0) return;
-    await Promise.all(filenames.map((id) => cloudinary.uploader.destroy(id)));
+/** Delete a single Cloudinary image by its public_id (filename). */
+const deleteFromCloudinary = async (filename) => {
+    if (!filename || filename === "listingimage") return;
+    try {
+        await cloudinary.uploader.destroy(filename);
+    } catch (err) {
+        console.error("Cloudinary delete failed:", err.message);
+    }
 };
-
-/** Map multer file objects → { filename, url } shape used by the model. */
-const mapFiles = (files) =>
-    (files || []).map((f) => ({ filename: f.filename, url: f.path }));
 
 /**
  * Build a Cloudinary URL that serves a resized version of the image.
@@ -57,26 +61,20 @@ module.exports.index = async (req, res) => {
     if (sort === "price_desc") sortOption = { price: -1 };
     if (sort === "newest")     sortOption = { createdAt: -1 };
 
-    // ── Build query ───────────────────────────────────────────────────────────
-    // Project only fields the index page actually renders — skip description,
-    // geometry, owner (not used on cards) to reduce payload.
     const projection = {
         title: 1, price: 1, location: 1, country: 1,
-        category: 1, images: 1, reviews: 1, createdAt: 1,
+        category: 1, image: 1, reviews: 1, createdAt: 1,
         ...(searchTerm ? { score: { $meta: "textScore" } } : {}),
     };
 
     let listingQuery = Listing.find(filter, projection);
     if (searchTerm && !sort) sortOption = { score: { $meta: "textScore" } };
 
-    // Populate only the rating field — we don't need comment/author/timestamps
-    // for the rating-filter calculation on the index page.
     listingQuery = listingQuery
         .sort(sortOption)
         .populate({ path: "reviews", select: "rating" })
-        .lean();                        // plain JS objects — faster than Mongoose docs
+        .lean();
 
-    // Run listings query and distinct countries in parallel
     const [allListingsRaw, allCountries] = await Promise.all([
         listingQuery,
         Listing.distinct("country"),
@@ -84,7 +82,7 @@ module.exports.index = async (req, res) => {
 
     allCountries.sort();
 
-    // ── Post-query rating filter ──────────────────────────────────────────────
+    // Post-query rating filter
     let allListings = allListingsRaw;
     if (minRating) {
         const min = Number(minRating);
@@ -95,15 +93,12 @@ module.exports.index = async (req, res) => {
         });
     }
 
-    // ── Inject thumbnail URLs via Cloudinary transforms ───────────────────────
-    // Cards display at ~400px wide — no need to serve 1920px originals.
+    // Inject thumbnail URLs — resize for card display (~600px wide)
     allListings = allListings.map((l) => {
-        const img = (l.images && l.images.length > 0) ? l.images[0] : null;
+        const rawUrl = (l.image && l.image.url) ? l.image.url : DEFAULT_IMAGE_URL;
         return {
             ...l,
-            _thumbUrl: img
-                ? cloudinaryResize(img.url, 600, 450)
-                : "https://images.unsplash.com/photo-1720884413532-59289875c3e1?q=80&w=600&auto=format",
+            _thumbUrl: cloudinaryResize(rawUrl, 600, 450),
         };
     });
 
@@ -126,7 +121,6 @@ module.exports.showListing = async (req, res) => {
     const { id } = req.params;
     const listing = await Listing
         .findById(id)
-        // Only fetch username from User — not email, hash, salt, timestamps
         .populate({ path: "reviews", populate: { path: "author", select: "username" } })
         .populate("owner", "username");
 
@@ -141,7 +135,9 @@ module.exports.showListing = async (req, res) => {
 module.exports.createListing = async (req, res) => {
     const newListing    = new Listing(req.body.listing);
     newListing.owner    = req.user._id;
-    newListing.images   = mapFiles(req.files);
+    if (req.file) {
+        newListing.image = { filename: req.file.filename, url: req.file.path };
+    }
     newListing.geometry = await geocode(newListing.location, newListing.country);
     await newListing.save();
     req.flash("success", "New listing created!");
@@ -156,12 +152,9 @@ module.exports.renderEditForm = async (req, res) => {
         req.flash("error", "Listing you are looking for does not exist!");
         return res.redirect("/listings");
     }
-    const thumbnails = listing.images.map((img) => ({
-        filename: img.filename,
-        url:      img.url,
-        thumb:    cloudinaryResize(img.url, 200, 150),
-    }));
-    res.render("listings/edit.ejs", { listing, thumbnails });
+    // Generate a smaller preview URL for the edit form thumbnail
+    const previewImageUrl = cloudinaryResize(listing.image.url, 250, 180);
+    res.render("listings/edit.ejs", { listing, previewImageUrl });
 };
 
 // PUT /listings/:id
@@ -170,21 +163,11 @@ module.exports.updateListing = async (req, res) => {
     const { image, ...listingData } = req.body.listing || {};
     const listing = await Listing.findByIdAndUpdate(id, listingData, { new: true });
 
-    const toDelete = Array.isArray(req.body.deleteImages)
-        ? req.body.deleteImages
-        : req.body.deleteImages ? [req.body.deleteImages] : [];
-
-    if (toDelete.length) {
-        await deleteFromCloudinary(toDelete);
-        listing.images = listing.images.filter((img) => !toDelete.includes(img.filename));
-    }
-
-    if (req.files && req.files.length > 0) {
-        if (listing.images.length + req.files.length > 5) {
-            req.flash("error", "A listing can have at most 5 images.");
-            return res.redirect(`/listings/${id}/edit`);
-        }
-        listing.images.push(...mapFiles(req.files));
+    if (req.file) {
+        // Delete the old image from Cloudinary before replacing it
+        await deleteFromCloudinary(listing.image.filename);
+        listing.image = { url: req.file.path, filename: req.file.filename };
+        await listing.save();
     }
 
     listing.geometry = await geocode(listing.location, listing.country);
@@ -198,7 +181,7 @@ module.exports.destroyListing = async (req, res) => {
     const { id } = req.params;
     const listing = await Listing.findByIdAndDelete(id);
     if (listing) {
-        await deleteFromCloudinary(listing.images.map((i) => i.filename));
+        await deleteFromCloudinary(listing.image.filename);
     }
     req.flash("success", "Listing deleted!");
     res.redirect("/listings");

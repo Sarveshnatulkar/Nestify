@@ -16,9 +16,11 @@ module.exports.isLoggedIn = (req, res, next) => {
 };
 
 // ── Save pre-login URL so we can redirect back after login ───────────────────
+// Only saves relative paths — rejects absolute URLs to prevent open redirect.
 module.exports.saveRedirectUrl = (req, res, next) => {
-    if (req.session.redirectUrl) {
-        res.locals.redirectUrl = req.session.redirectUrl;
+    const url = req.session.redirectUrl;
+    if (url && url.startsWith("/") && !url.startsWith("//")) {
+        res.locals.redirectUrl = url;
     }
     next();
 };

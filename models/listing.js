@@ -20,15 +20,16 @@ const listingSchema = new Schema(
             type: String,
             trim: true,
         },
-        // Array of uploaded images. First image is the cover/hero.
-        images: {
-            type: [
-                {
-                    filename: { type: String, required: true },
-                    url:      { type: String, required: true },
-                },
-            ],
-            default: [],
+        image: {
+            filename: {
+                type:    String,
+                default: "listingimage",
+            },
+            url: {
+                type:    String,
+                default: DEFAULT_IMAGE_URL,
+                set: (v) => (!v || v.trim() === "" ? DEFAULT_IMAGE_URL : v),
+            },
         },
         price: {
             type: Number,
@@ -48,9 +49,6 @@ const listingSchema = new Schema(
                       "Amazing pools", "Arctic", "Desert", "Boat", "Play"],
             default: "Rooms",
         },
-        // GeoJSON Point — populated server-side via Mapbox Geocoding API
-        // when a listing is created or updated.
-        // null means geocoding failed or has not run yet.
         geometry: {
             type: {
                 type:  String,
@@ -71,24 +69,16 @@ const listingSchema = new Schema(
             ref:  "User",
         },
     },
-    { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
+    { timestamps: true }
 );
 
-// Backward-compatible virtual — existing templates use listing.image.url
-// Returns the first image, or the default placeholder if none uploaded.
-listingSchema.virtual("image").get(function () {
-    if (this.images && this.images.length > 0) return this.images[0];
-    return { filename: "listingimage", url: DEFAULT_IMAGE_URL };
-});
-
-// Full-text search index — powers fast, case-insensitive search across
-// title, location and country. MongoDB uses this index for $text queries.
+// Full-text search index
 listingSchema.index(
     { title: "text", location: "text", country: "text" },
     {
-        weights:           { title: 5, location: 3, country: 1 },
-        name:              "listing_text_search",
-        default_language:  "english",
+        weights:          { title: 5, location: 3, country: 1 },
+        name:             "listing_text_search",
+        default_language: "english",
     }
 );
 

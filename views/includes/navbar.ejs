@@ -24,14 +24,14 @@
             type="search"
             name="q"
             placeholder="Search destinations"
-            value="<%= q %>"
+            value="<%= locals.q || '' %>"
             aria-label="Search destinations"
           />
           <button class="search-btn" type="submit">
             <i class="fa-solid fa-magnifying-glass"></i>
             <span>Search</span>
           </button>
-          <% if (q && q.trim() !== '') { %>
+          <% if (locals.q && locals.q.trim() !== '') { %>
             <a href="/listings" class="clear-btn text-decoration-none">
               <i class="fa-solid fa-xmark"></i>
               <span>Clear</span>

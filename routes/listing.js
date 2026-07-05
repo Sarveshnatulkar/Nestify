@@ -1,25 +1,24 @@
 "use strict";
 
-const express    = require("express");
-const multer     = require("multer");
-const router     = express.Router();
-const wrapAsync  = require("../utils/wrapAsync.js");
-const { storage }  = require("../cloudConfig.js");
+const express   = require("express");
+const multer    = require("multer");
+const router    = express.Router();
+const wrapAsync = require("../utils/wrapAsync.js");
+const { storage }          = require("../cloudConfig.js");
 const { isLoggedIn, isOwner, validateListing } = require("../middleware.js");
-const { validateFiles } = require("../utils/validate.js");
-const listingController = require("../controllers/listing.js");
+const { validateFiles }    = require("../utils/validate.js");
+const listingController    = require("../controllers/listing.js");
 
-// Accept up to 5 images under the field name "listing[images]"
 const upload = multer({
     storage,
-    limits: { fileSize: 8 * 1024 * 1024 }, // 8 MB hard limit per file (Multer layer)
+    limits: { fileSize: 8 * 1024 * 1024 }, // 8 MB per file
 });
 
 router.route("/")
     .get(wrapAsync(listingController.index))
     .post(
         isLoggedIn,
-        upload.array("listing[images]", 5),
+        upload.single("listing[image]"),
         validateFiles,
         validateListing,
         wrapAsync(listingController.createListing)
@@ -32,7 +31,7 @@ router.route("/:id")
     .put(
         isLoggedIn,
         isOwner,
-        upload.array("listing[images]", 5),
+        upload.single("listing[image]"),
         validateFiles,
         validateListing,
         wrapAsync(listingController.updateListing)

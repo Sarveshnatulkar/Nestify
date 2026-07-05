@@ -3,6 +3,21 @@
 const User    = require("../models/user.js");
 const Listing = require("../models/listing.js");
 
+// Safe redirect helper — only follows relative paths from Referer
+const safeReferer = (req, fallback) => {
+    const ref = req.get("Referer") || "";
+    try {
+        const url = new URL(ref);
+        // Only redirect to same origin
+        if (url.origin === `${req.protocol}://${req.get("host")}`) {
+            return url.pathname + url.search;
+        }
+    } catch {
+        // Not a valid URL
+    }
+    return fallback;
+};
+
 // GET /wishlist
 module.exports.showWishlist = async (req, res) => {
     const user = await User
@@ -25,14 +40,12 @@ module.exports.addToWishlist = async (req, res) => {
         return res.redirect("/listings");
     }
 
-    // $addToSet is atomic and idempotent — no duplicate check needed
     await User.findByIdAndUpdate(req.user._id, {
         $addToSet: { wishlist: listingId },
     });
 
     req.flash("success", `"${listing.title}" saved to your wishlist.`);
-    // Redirect back to wherever the user came from
-    res.redirect(req.get("Referrer") || `/listings/${listingId}`);
+    res.redirect(safeReferer(req, `/listings/${listingId}`));
 };
 
 // DELETE /wishlist/:listingId  — remove from wishlist
@@ -44,5 +57,5 @@ module.exports.removeFromWishlist = async (req, res) => {
     });
 
     req.flash("success", "Removed from your wishlist.");
-    res.redirect(req.get("Referrer") || "/wishlist");
+    res.redirect(safeReferer(req, "/wishlist"));
 };

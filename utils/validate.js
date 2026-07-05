@@ -27,9 +27,8 @@ const listingSchema = Joi.object({
             }),
         category: Joi.string().valid(...CATEGORIES).optional()
             .messages({ "any.only": "Invalid category selected" }),
-        // images arrive via multer (req.files), not req.body — ignore here
-        image:  Joi.any().optional(),
-        images: Joi.any().optional(),
+        // image arrives via multer (req.file), not req.body — ignore here
+        image: Joi.any().optional(),
     }).required(),
 });
 
@@ -49,27 +48,21 @@ const reviewSchema = Joi.object({
 });
 
 // ── File upload validation middleware ─────────────────────────────────────────
-const ALLOWED_MIME   = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-const MAX_FILE_SIZE  = 8 * 1024 * 1024;  // 8 MB per file
-const MAX_FILE_COUNT = 5;
+const ALLOWED_MIME  = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+const MAX_FILE_SIZE = 8 * 1024 * 1024; // 8 MB
 
 const validateFiles = (req, res, next) => {
-    const files = req.files || (req.file ? [req.file] : []);
+    // Single-file upload — multer puts it in req.file
+    const file = req.file;
+    if (!file) return next(); // image is optional on edit
 
-    if (files.length > MAX_FILE_COUNT) {
+    if (!ALLOWED_MIME.includes(file.mimetype)) {
         return next(new ExpressError(400,
-            `You can upload a maximum of ${MAX_FILE_COUNT} images.`));
+            `"${file.originalname}" is not an allowed file type. Use JPG, PNG, or WebP.`));
     }
-
-    for (const file of files) {
-        if (!ALLOWED_MIME.includes(file.mimetype)) {
-            return next(new ExpressError(400,
-                `"${file.originalname}" is not an allowed file type. Use JPG, PNG, or WebP.`));
-        }
-        if (file.size > MAX_FILE_SIZE) {
-            return next(new ExpressError(400,
-                `"${file.originalname}" exceeds the 8 MB size limit.`));
-        }
+    if (file.size > MAX_FILE_SIZE) {
+        return next(new ExpressError(400,
+            `"${file.originalname}" exceeds the 8 MB size limit.`));
     }
 
     next();
