@@ -44,39 +44,52 @@
 
         <script>
           (function () {
-            // Leaflet uses [lat, lng]; GeoJSON stores [lng, lat]
             const lng = <%- listing.geometry.coordinates[0] %>;
             const lat = <%- listing.geometry.coordinates[1] %>;
             const locationLabel = '<%- (listing.location + ", " + listing.country).replace(/\\/g, "\\\\").replace(/'/g, "\\'") %>';
             const listingTitle  = '<%- listing.title.replace(/\\/g, "\\\\").replace(/'/g, "\\'") %>';
 
-            const map = L.map('listing-map', { scrollWheelZoom: false })
-                         .setView([lat, lng], 13);
+            // Wait for the DOM to be fully painted before initialising the map
+            // so Leaflet can read the container dimensions correctly
+            window.addEventListener('load', function () {
+              if (typeof L === 'undefined') {
+                document.getElementById('listing-map').innerHTML =
+                  '<div class="map-unavailable"><i class="fa-solid fa-map-location-dot"></i><p>Map could not be loaded.</p></div>';
+                return;
+              }
 
-            // OpenStreetMap tile layer — free, no token
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-              attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-              maxZoom: 19,
-            }).addTo(map);
+              const map = L.map('listing-map', {
+                scrollWheelZoom: false,
+                zoomControl:     true,
+              }).setView([lat, lng], 13);
 
-            // Custom brand-red marker using a DivIcon
-            const markerIcon = L.divIcon({
-              className:   'leaflet-map-marker',
-              html:        '<div class="map-marker-pin"></div>',
-              iconSize:    [28, 28],
-              iconAnchor:  [14, 14],
-              popupAnchor: [0, -18],
+              L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
+                maxZoom:     19,
+                crossOrigin: true,
+              }).addTo(map);
+
+              // Force Leaflet to recalculate container size after layout settles
+              setTimeout(function () { map.invalidateSize(); }, 200);
+
+              // Custom brand-red circular marker
+              const markerIcon = L.divIcon({
+                className:   '',
+                html:        '<div class="map-marker-pin"></div>',
+                iconSize:    [28, 28],
+                iconAnchor:  [14, 14],
+                popupAnchor: [0, -20],
+              });
+
+              L.marker([lat, lng], { icon: markerIcon })
+                .addTo(map)
+                .bindPopup(
+                  '<strong>' + listingTitle + '</strong>' +
+                  '<br><span>' + locationLabel + '</span>',
+                  { maxWidth: 220 }
+                )
+                .openPopup();
             });
-
-            // Marker with popup
-            L.marker([lat, lng], { icon: markerIcon })
-              .addTo(map)
-              .bindPopup(
-                '<strong>' + listingTitle + '</strong>' +
-                '<br><span>' + locationLabel + '</span>',
-                { maxWidth: 220, closeButton: true }
-              )
-              .openPopup();
           })();
         </script>
 

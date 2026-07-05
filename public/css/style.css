@@ -147,6 +147,8 @@ h1, h2, h3, h4, h5, h6 {
   border-bottom: 1px solid var(--border);
   height: 5rem;
   padding: 0 1.5rem;
+  position: relative;
+  z-index: 1030; /* above Leaflet's z-index 400–600 range */
 }
 
 .navbar-brand .fa-compass {
@@ -685,12 +687,13 @@ footer {
 
 #listing-map {
   width: 100%;
-  height: 360px;
+  height: 380px;
   border-radius: var(--radius-lg);
   border: 1.5px solid var(--border);
-  overflow: hidden;
-  /* Leaflet sets z-index on internal elements — keep them below our navbar */
-  z-index: 0;
+  /* Do NOT set overflow:hidden — it clips Leaflet tile loading */
+  /* position relative lets Leaflet's internal z-indexes work correctly */
+  position: relative;
+  z-index: 1;
 }
 
 /* Leaflet popup — match site design */
@@ -764,5 +767,5 @@ footer {
 
 @media (max-width: 576px) {
   #listing-map,
-  .map-unavailable { height: 260px; }
+  .map-unavailable { height: 280px; }
 }
