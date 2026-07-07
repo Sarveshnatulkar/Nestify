@@ -50,13 +50,15 @@
 
       <!-- Right-side actions -->
       <div class="navbar-nav d-flex flex-row align-items-center gap-2 ms-md-auto mt-2 mt-md-0">
-        <a class="nav-link nav-list-btn text-decoration-none" href="/listings/new">
-          List your property
-        </a>
+        <% if (currUser) { %>
+          <a class="nav-link nav-list-btn text-decoration-none" href="/listings/new">
+            List your property
+          </a>
+        <% } %>
 
         <% if (!currUser) { %>
-          <a class="nav-link" href="/signup">Sign up</a>
-          <a class="nav-link" href="/login">Log in</a>
+          <a class="nav-link auth-btn signup-btn" href="/signup">Sign up</a>
+          <a class="nav-link auth-btn login-btn" href="/login">Log in</a>
         <% } else { %>
           <a class="nav-link nav-wishlist-btn text-decoration-none" href="/wishlist" title="My Wishlist">
             <i class="fa-regular fa-heart"></i>

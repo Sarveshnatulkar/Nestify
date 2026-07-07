@@ -992,3 +992,19 @@ footer {
 @media (max-width: 400px) {
   .filter-panel-grid { grid-template-columns: 1fr; }
 }
+
+.auth-btn {
+    border: 1.8px solid ;
+    border-radius: 999px;
+    padding: 7px 16px !important;
+    margin-left: 8px;
+    font-weight: 600;
+    transition: all 0.25s ease;
+}
+
+.auth-btn:hover {
+    background-color: #ff385c;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 56, 92, 0.25);
+}
