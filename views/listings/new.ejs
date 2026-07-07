@@ -22,29 +22,13 @@
           <div class="invalid-feedback">Please add a description.</div>
         </div>
 
-        <!-- ── Image upload ───────────────────────────────────── -->
+        <!-- Cover image upload -->
         <div class="mb-3">
-          <label class="form-label">
-            Photos
-            <span class="upload-hint">Up to 5 images · JPG, PNG, WebP · Max 8 MB each</span>
-          </label>
-
-          <div class="upload-drop-zone" id="dropZone">
-            <input id="images" name="listing[images]" type="file"
-                   accept="image/jpeg,image/png,image/webp"
-                   multiple class="upload-file-input" />
-            <div class="upload-drop-body">
-              <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
-              <p class="upload-drop-text">Drag & drop photos here, or <span class="upload-browse">browse</span></p>
-              <p class="upload-drop-hint">First photo will be the cover image</p>
-            </div>
-          </div>
-
-          <!-- Preview grid — populated by JS -->
-          <div class="upload-preview-grid" id="previewGrid"></div>
-          <div class="invalid-feedback d-block" id="imageError" style="display:none!important;"></div>
+          <label for="image" class="form-label">Cover Image</label>
+          <input id="image" name="listing[image]" type="file" class="form-control"
+                 accept="image/jpeg, image/png, image/jpg, image/webp" />
+          <div class="form-text">JPG, PNG, or WebP · Max 8 MB</div>
         </div>
-        <!-- ──────────────────────────────────────────────────── -->
 
         <div class="row g-3 mb-3">
           <div class="col-md-4">
