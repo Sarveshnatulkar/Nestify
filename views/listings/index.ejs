@@ -1,96 +1,201 @@
 <%layout("/layouts/boilerplate")-%>
 
-<style>
-#filters{
-    display: flex;
-    flex-wrap: wrap;
-    margin-left: 5rem;
-}
-.filters{
-    text-align: center;
-    margin-top: 2rem;
-    margin-right: 2rem;
-    opacity: 0.7;
-}
-.filters:hover{
-    opacity: 1;
-    cursor: pointer;
-}
-.filters p{
-    font-size: 1 rem;
-
-}
-</style>
-
+<!-- ── Category pill bar ────────────────────────────────────────── -->
 <div id="filters">
-<div class="filters">
-    <div><i class="fa-solid fa-bed"></i></div>
-    <p>Rooms</p>
-</div>
-<div class="filters">
-    <div><i class="fa-solid fa-leaf"></i></div>
-    <p>Amazing views</p>
-</div>
-<div class="filters">
-    <div><i class="fa-brands fa-fort-awesome"></i></div>
-    <p>Castle</p>
-</div>
-<div class="filters">
-    <div><i class="fa-solid fa-campground"></i></div>
-    <p>Camping</p>
-</div>
-<div class="filters">
-    <div><i class="fa-solid fa-mountain"></i></div>
-    <p>Mountains</p>
-</div>
-<div class="filters">
-    <div><i class="fa-solid fa-person-swimming"></i></div>
-    <p>Amazing pools</p>
-</div>
-<div class="filters">
-    <div><i class="fa-solid fa-snowflake"></i></div>
-    <p>Arctic</p>
-</div>
-<div class="filters">
-    <div><i class="fa-solid fa-sun"></i></div>
-    <p>Desert</p>
-</div>
-<div class="filters">
-    <div><i class="fa-solid fa-ship"></i></div>
-    <p>Boat</p>
-</div>
-<div class="filters">
-    <div><i class="fa-solid fa-volleyball"></i></div>
-    <p>Play</p>
+
+  <% const categories = [
+    { label: "Rooms",         icon: "fa-solid fa-bed" },
+    { label: "Amazing views", icon: "fa-solid fa-leaf" },
+    { label: "Castle",        icon: "fa-brands fa-fort-awesome" },
+    { label: "Camping",       icon: "fa-solid fa-campground" },
+    { label: "Mountains",     icon: "fa-solid fa-mountain" },
+    { label: "Amazing pools", icon: "fa-solid fa-person-swimming" },
+    { label: "Arctic",        icon: "fa-solid fa-snowflake" },
+    { label: "Desert",        icon: "fa-solid fa-sun" },
+    { label: "Boat",          icon: "fa-solid fa-ship" },
+    { label: "Play",          icon: "fa-solid fa-volleyball" },
+  ]; %>
+
+  <% for (let cat of categories) { %>
+    <a href="/listings?<%= new URLSearchParams({
+        ...(q ? {q} : {}),
+        ...(filters.category === cat.label ? {} : { category: cat.label }),
+        ...(filters.country   ? { country:   filters.country }   : {}),
+        ...(filters.minPrice  ? { minPrice:  filters.minPrice }  : {}),
+        ...(filters.maxPrice  ? { maxPrice:  filters.maxPrice }  : {}),
+        ...(filters.minRating ? { minRating: filters.minRating } : {}),
+        ...(filters.sort      ? { sort:      filters.sort }      : {}),
+      }).toString() %>"
+       class="filters <%= filters.category === cat.label ? 'active' : '' %>"
+       title="<%= cat.label %>">
+      <i class="<%= cat.icon %>"></i>
+      <p><%= cat.label %></p>
+    </a>
+  <% } %>
+
+  <!-- Filter toggle button — sits at the right end of the pill bar -->
+  <button class="filter-toggle-btn ms-auto flex-shrink-0"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#filterPanel"
+          aria-expanded="false"
+          aria-controls="filterPanel">
+    <i class="fa-solid fa-sliders me-1"></i> Filters
+    <% const activeFilterCount = [filters.country, filters.minPrice, filters.maxPrice, filters.minRating, filters.sort].filter(Boolean).length; %>
+    <% if (activeFilterCount > 0) { %>
+      <span class="filter-badge"><%= activeFilterCount %></span>
+    <% } %>
+  </button>
 </div>
 
+<!-- ── Collapsible filter panel ─────────────────────────────────── -->
+<div class="collapse <%= (filters.country || filters.minPrice || filters.maxPrice || filters.minRating || filters.sort) ? 'show' : '' %>"
+     id="filterPanel">
+  <form class="filter-panel" method="GET" action="/listings">
 
-</div>
+    <!-- Preserve search query -->
+    <% if (q) { %><input type="hidden" name="q" value="<%= q %>"><% } %>
+    <!-- Preserve active category -->
+    <% if (filters.category) { %><input type="hidden" name="category" value="<%= filters.category %>"><% } %>
 
-<div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 mt-3">
-  <% if (allListings.length === 0) { %>
-    <div class="col">
-      <p class="text-muted">No listings found for "<%= q %>"</p>
+    <div class="filter-panel-grid">
+
+      <!-- Country -->
+      <div class="filter-group">
+        <label class="filter-label">Country</label>
+        <select name="country" class="filter-select">
+          <option value="">All countries</option>
+          <% for (let c of allCountries) { %>
+            <option value="<%= c %>" <%= filters.country === c ? 'selected' : '' %>><%= c %></option>
+          <% } %>
+        </select>
+      </div>
+
+      <!-- Min price -->
+      <div class="filter-group">
+        <label class="filter-label">Min price (₹)</label>
+        <input type="number" name="minPrice" min="0" placeholder="e.g. 500"
+               class="filter-input" value="<%= filters.minPrice %>">
+      </div>
+
+      <!-- Max price -->
+      <div class="filter-group">
+        <label class="filter-label">Max price (₹)</label>
+        <input type="number" name="maxPrice" min="0" placeholder="e.g. 5000"
+               class="filter-input" value="<%= filters.maxPrice %>">
+      </div>
+
+      <!-- Min rating -->
+      <div class="filter-group">
+        <label class="filter-label">Min rating</label>
+        <select name="minRating" class="filter-select">
+          <option value="">Any rating</option>
+          <option value="1" <%= filters.minRating === '1' ? 'selected' : '' %>>★ 1+</option>
+          <option value="2" <%= filters.minRating === '2' ? 'selected' : '' %>>★★ 2+</option>
+          <option value="3" <%= filters.minRating === '3' ? 'selected' : '' %>>★★★ 3+</option>
+          <option value="4" <%= filters.minRating === '4' ? 'selected' : '' %>>★★★★ 4+</option>
+          <option value="5" <%= filters.minRating === '5' ? 'selected' : '' %>>★★★★★ 5 only</option>
+        </select>
+      </div>
+
+      <!-- Sort -->
+      <div class="filter-group">
+        <label class="filter-label">Sort by</label>
+        <select name="sort" class="filter-select">
+          <option value="newest"     <%= (filters.sort === 'newest'     || !filters.sort) ? 'selected' : '' %>>Newest first</option>
+          <option value="price_asc"  <%= filters.sort === 'price_asc'  ? 'selected' : '' %>>Price: low to high</option>
+          <option value="price_desc" <%= filters.sort === 'price_desc' ? 'selected' : '' %>>Price: high to low</option>
+        </select>
+      </div>
+
     </div>
+
+    <div class="filter-panel-actions">
+      <button type="submit" class="btn btn-brand btn-sm px-4">Apply</button>
+      <a href="/listings<%= q ? '?q=' + encodeURIComponent(q) : '' %>"
+         class="btn btn-ghost btn-sm">Clear filters</a>
+    </div>
+
+  </form>
+</div>
+
+<!-- ── Result summary ────────────────────────────────────────────── -->
+<% const hasActiveFilters = q || filters.category || filters.country || filters.minPrice || filters.maxPrice || filters.minRating; %>
+<% if (hasActiveFilters) { %>
+  <div class="result-summary">
+    <span>
+      <strong><%= resultCount %></strong>
+      <%= resultCount === 1 ? 'place' : 'places' %> found
+      <% if (q) { %> for "<strong><%= q %></strong>"<% } %>
+      <% if (filters.category) { %> &middot; <span class="result-tag"><%= filters.category %></span><% } %>
+      <% if (filters.country) { %> &middot; <span class="result-tag"><%= filters.country %></span><% } %>
+      <% if (filters.minPrice || filters.maxPrice) { %>
+        &middot; <span class="result-tag">
+          ₹<%= filters.minPrice || '0' %> – ₹<%= filters.maxPrice || '∞' %>
+        </span>
+      <% } %>
+      <% if (filters.minRating) { %> &middot; <span class="result-tag">★ <%= filters.minRating %>+</span><% } %>
+    </span>
+    <a href="/listings" class="btn btn-ghost btn-sm">Clear all</a>
+  </div>
+<% } %>
+
+<!-- ── Listings grid ─────────────────────────────────────────────── -->
+<div class="row row-cols-xl-3 row-cols-md-2 row-cols-1 mt-2 g-4">
+
+  <% if (allListings.length === 0) { %>
+    <div class="col-12 text-center py-5">
+      <i class="fa-solid fa-magnifying-glass fa-2x mb-3" style="color:var(--text-light);"></i>
+      <h5 style="color:var(--text-primary);">No places found</h5>
+      <p style="color:var(--text-secondary); font-size:0.9rem;">
+        Try adjusting your filters or search term.
+      </p>
+      <a href="/listings" class="btn btn-ghost mt-1">Browse all listings</a>
+    </div>
+
   <% } else { %>
     <% for (let listing of allListings) { %>
-      <a href="/listings/<%= listing._id %>" class="listing-link">
-        <div class="card col listing-card">
-          <img src="<%= listing.image.url %>" 
-               class="card-img-top" 
-               alt="Listing_image" 
-               style="height: 20rem; object-fit: cover;">
-          <div class="card-body">
-            <p class="card-text">
-              <b><%= listing.title %></b><br>
-              ₹<%= listing.price.toLocaleString("en-IN") %>/night<br>
-              <small><%= listing.location %>, <%= listing.country %></small>
-            </p>
-          </div>
+      <div class="col">
+        <div class="listing-card-wrapper">
+          <a href="/listings/<%= listing._id %>" class="listing-link">
+            <div class="listing-card">
+              <img
+                src="<%= listing._thumbUrl %>"
+                class="card-img-top"
+                alt="<%= listing.title %>"
+                loading="lazy"
+                decoding="async"
+              />
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mt-1">
+                  <p class="card-title-text mb-0"><%= listing.title %></p>
+                  <% if (listing.category) { %>
+                    <span class="card-category-tag"><%= listing.category %></span>
+                  <% } %>
+                </div>
+                <p class="card-location-text mb-0"><%= listing.location %>, <%= listing.country %></p>
+                <p class="card-price-text mb-0"><strong>₹<%= listing.price.toLocaleString("en-IN") %></strong> / night</p>
+              </div>
+            </div>
+          </a>
+
+          <!-- Wishlist heart — only for logged-in users -->
+          <% if (currUser) { %>
+            <% const isSaved = wishlistIds.has(listing._id.toString()); %>
+            <form method="post"
+                  action="/wishlist/<%= listing._id %><%= isSaved ? '?_method=DELETE' : '' %>"
+                  class="wishlist-card-form">
+              <button type="submit"
+                      class="wishlist-heart-btn <%= isSaved ? 'saved' : '' %>"
+                      title="<%= isSaved ? 'Remove from wishlist' : 'Save to wishlist' %>"
+                      aria-label="<%= isSaved ? 'Remove from wishlist' : 'Save to wishlist' %>">
+                <i class="<%= isSaved ? 'fa-solid' : 'fa-regular' %> fa-heart"></i>
+              </button>
+            </form>
+          <% } %>
         </div>
-      </a>
+      </div>
     <% } %>
   <% } %>
-</div>
 
-   
+</div>
