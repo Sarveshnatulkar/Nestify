@@ -242,6 +242,39 @@ h1, h2, h3, h4, h5, h6 {
   background-color: var(--bg-light);
 }
 
+/* "Home" pill button — left of search bar */
+.nav-home-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background-color: var(--white);
+  color: var(--text-primary) !important;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 0.42rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+  transition: background-color var(--transition), border-color var(--transition),
+              box-shadow var(--transition), transform var(--transition);
+}
+.nav-home-btn i {
+  font-size: 0.9rem;
+  color: var(--brand);
+  transition: transform var(--transition);
+}
+.nav-home-btn:hover {
+  background-color: var(--bg-light);
+  border-color: var(--text-primary);
+  box-shadow: 0 3px 10px rgba(0,0,0,.10);
+  transform: translateY(-1px);
+  color: var(--text-primary) !important;
+}
+.nav-home-btn:hover i {
+  transform: scale(1.15);
+}
+
 /* "List your property" pill */
 .nav-list-btn {
   background-color: var(--brand);
