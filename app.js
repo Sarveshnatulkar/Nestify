@@ -43,13 +43,6 @@ connect().catch((err) => {
 
 // ── App setup ─────────────────────────────────────────────────────────────────
 const app = express();
-//should delete later
-app.use((req, res, next) => {
-    console.log("=== Locals Middleware ===");
-    console.log("req.user:", req.user);
-    console.log("currUser before render:", res.locals.currUser);
-    next();
-});
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
