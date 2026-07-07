@@ -120,32 +120,36 @@ http://localhost:8080
 ## 📸 Screenshots
 
 ### Home Page
-
-(Add screenshot here)
+![Home Page](screenshots/homePage.png)
 
 ---
 
 ### Listing Details
-
-(Add screenshot here)
+![Listing Details](screenshots/Listing.png)
 
 ---
 
 ### Create Listing
 
-(Add screenshot here)
+![Create Listing](screenshots/addYourListingPage.png)
 
 ---
 
 ### Wishlist
 
-(Add screenshot here)
+![Wishlist](screenshots/wishlist.png)
 
 ---
 
 ### Map
 
-(Add screenshot here)
+![Map](screenshots/map.png)
+
+---
+
+### reviews
+
+![reviews](screenshots/reviews.png)
 
 ---
 
@@ -176,9 +180,9 @@ http://localhost:8080
 **Sarvesh Natulkar**
 
 GitHub:
-https://github.com/YourUsername
+https://github.com/Sarveshnatulkar
 
 LinkedIn:
-https://linkedin.com/in/YourProfile
+https://linkedin.com/in/sarvesh-natulkar-3627552a8
 
 ---
